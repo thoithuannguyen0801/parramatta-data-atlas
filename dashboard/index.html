@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSW & Sydney–Parramatta — Data Atlas</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+:root{
+  --ink:#10243E; --ink2:#1C3A5E; --paper:#F6F3EC; --card:#FFFFFF;
+  --signal:#E0533D; --signal2:#F0A35E; --teal:#2E7C84; --line:#D9D2C4;
+  --muted:#5C6B7A; --good:#2E7C84; --bad:#C44A33;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* HERO */
+header{background:var(--ink);color:var(--paper);padding:54px 0 46px;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-80px;top:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(224,83,61,.22),transparent 68%)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--signal2);margin-bottom:18px}
+h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,5.4vw,62px);line-height:1.02;letter-spacing:-.01em;max-width:16ch}
+h1 em{font-style:italic;color:var(--signal2)}
+.sub{margin-top:20px;max-width:62ch;color:#C9D4E0;font-size:16px}
+.byline{margin-top:26px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:#9FB0C2}
+.tag{border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 13px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em}
+.tag.solid{background:var(--signal);border-color:var(--signal);color:#fff}
+
+/* SECTION */
+section{padding:52px 0;border-bottom:1px solid var(--line)}
+.shead{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+.snum{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--signal);font-weight:500}
+h2{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(24px,3.2vw,34px);letter-spacing:-.01em}
+.sdesc{color:var(--muted);max-width:70ch;margin:10px 0 30px;font-size:15px}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+.kpi .v{font-family:'Fraunces',serif;font-weight:900;font-size:34px;line-height:1;letter-spacing:-.02em}
+.kpi .v.up{color:var(--good)} .kpi .v.down{color:var(--bad)}
+.kpi .l{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.4}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+.panel h3{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin-bottom:4px}
+.panel .note{font-size:13px;color:var(--muted);margin-bottom:16px}
+.chartbox{position:relative;height:300px}
+.insight{margin-top:16px;padding:13px 15px;background:var(--paper);border-left:3px solid var(--signal);border-radius:0 8px 8px 0;font-size:13.5px;color:var(--ink2)}
+
+/* MAP + score section */
+.scorerow{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;align-items:start}
+#map{height:520px;border-radius:16px;border:1px solid var(--line);z-index:1}
+.rank{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rank .rh{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.rank .rh h3{font-family:'Fraunces',serif;font-size:17px}
+.rows{max-height:454px;overflow-y:auto}
+.r{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;padding:10px 20px;border-bottom:1px solid #EFEAE0;font-size:13.5px;cursor:pointer;transition:background .12s}
+.r:hover{background:var(--paper)}
+.r .rk{font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:12px}
+.r .nm{font-weight:500}
+.r .sc{font-family:'IBM Plex Mono',monospace;font-weight:500}
+.bar{height:5px;border-radius:3px;margin-top:4px;background:linear-gradient(90deg,var(--signal),var(--signal2))}
+.legend{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.swatch{width:14px;height:14px;border-radius:3px}
+
+footer{padding:40px 0 60px;color:var(--muted);font-size:13px}
+footer a{color:var(--ink2)}
+.disclaimer{margin-top:14px;font-size:12px;color:var(--muted);max-width:80ch}
+@media(max-width:860px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid2,.scorerow{grid-template-columns:1fr}
+  #map{height:380px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">USYD · DATA2001 · Individual contribution</div>
+    <h1>How <em>well-resourced</em> is your suburb? A data atlas of NSW &amp; Sydney&ndash;Parramatta.</h1>
+    <p class="sub">Two linked analyses: the demographic forces reshaping New South Wales (2011&ndash;2024), and a points-of-interest resource score computed for all 34 SA2 regions inside the Sydney&ndash;Parramatta SA4 zone.</p>
+    <div class="byline">
+      <span class="tag solid">Tony Nguyen</span>
+      <span class="tag">Pandas · GeoPandas · PostGIS</span>
+      <span class="tag">NSW POI API</span>
+      <span class="tag">2,086 POIs · 34 SA2s</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">01</span><h2>New South Wales, in motion</h2></div>
+    <p class="sdesc">Five derived statistics from the ABS NSW Region Summary. The headline story: natural population growth is fading while migration does the heavy lifting &mdash; and the state is steadily ageing.</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="k1"></div><div class="l">Net migration share of 2023 growth &mdash; up from 46% in 2022</div></div>
+      <div class="kpi"><div class="v up" id="k2"></div><div class="l">Old-age dependency ratio, 2024 &mdash; rising every year since 2019</div></div>
+      <div class="kpi"><div class="v up" id="k3"></div><div class="l">Aboriginal &amp; Torres Strait Islander population growth, 2011&ndash;2021</div></div>
+      <div class="kpi"><div class="v" id="k4"></div><div class="l">Of NSW residents were born overseas by 2021 (Census)</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="grid2">
+      <div class="panel">
+        <h3>Growth decomposition</h3>
+        <p class="note">Natural increase vs net migration, NSW (persons)</p>
+        <div class="chartbox"><canvas id="cGrowth"></canvas></div>
+        <div class="insight">Natural increase is shrinking (births falling, deaths rising) while net migration rebounded hard post-COVID &mdash; by 2023 it drove <b>82%</b> of all NSW growth.</div>
+      </div>
+      <div class="panel">
+        <h3>An ageing state</h3>
+        <p class="note">Dependents per 100 working-age people</p>
+        <div class="chartbox"><canvas id="cDep"></canvas></div>
+        <div class="insight">Youth dependency fell (&minus;1.34 pts) but old-age dependency climbed (+2.24 pts) from 2019&ndash;2024 &mdash; fewer children, more retirees per worker.</div>
+      </div>
+      <div class="panel">
+        <h3>The COVID migration shock</h3>
+        <p class="note">NSW migration components (persons)</p>
+        <div class="chartbox"><canvas id="cMig"></canvas></div>
+        <div class="insight">2021 saw <b>negative</b> net overseas migration &mdash; historically unprecedented with borders shut &mdash; before a record +177k rebound in 2023.</div>
+      </div>
+      <div class="panel">
+        <h3>Shifting origins of overseas-born NSW</h3>
+        <p class="note">Share of NSW population by region of birth (%)</p>
+        <div class="chartbox"><canvas id="cBorn"></canvas></div>
+        <div class="insight">Southern &amp; Central Asia (incl. India) grew fastest, +1.2 pts in five years &mdash; the largest shift in NSW's migration mix.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="shead"><span class="snum">02</span><h2>The well-resourced score</h2></div>
+    <p class="sdesc">For each SA2 in Sydney&ndash;Parramatta, points of interest were harvested from the NSW POI API, filtered to inside-polygon, and stored in PostGIS. The score is a sigmoid of the standardised POI count: <span class="mono">Score = S(z_POI)</span>. Click any region to locate it on the map.</p>
+    <div class="scorerow">
+      <div id="map"></div>
+      <div class="rank">
+        <div class="rh">
+          <h3>34 SA2 regions, ranked</h3>
+          <div class="legend"><span class="swatch" style="background:#C44A33"></span>low<span class="swatch" style="background:#F0A35E"></span><span class="swatch" style="background:#2E7C84"></span>high</div>
+        </div>
+        <div class="rows" id="rankRows"></div>
+      </div>
+    </div>
+    <div class="insight" style="margin-top:22px">Scores span <b>0.16&ndash;0.89</b>. The bottom of the table is dominated by designated <b>non-residential land</b> &mdash; Yennora &amp; Smithfield industrial estates, Rookwood Cemetery &mdash; not under-served communities. That is the scoring method's key limitation: a raw POI count conflates "few amenities" with "not a residential area".</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <b>University of Sydney, DATA2001.</b> My individual work: the NSW Population &amp; Migration analysis and the Sydney&ndash;Parramatta SA4 resource-scoring pipeline, built end to end.<br>
+    <span class="disclaimer">Data: Australian Bureau of Statistics (NSW Region Summary) &amp; NSW Points of Interest API. Map centroids for several SA2s are approximate placements for visualisation; authoritative boundaries are in the notebook's GeoPandas/PostGIS workflow. Scores recomputed from stored POI counts.</span>
+  </div>
+</footer>
+
+<script>
+const DATA = {"scores": [{"sa2_name": "North Parramatta", "poi_count": "132", "z_poi": "2.038", "score": "0.8847", "centroid_lon": "151.00925866303365", "centroid_lat": "-33.802724277562405"}, {"sa2_name": "Ermington - Rydalmere", "poi_count": "118", "z_poi": "1.6341", "score": "0.8367", "centroid_lon": "151.0519724465877", "centroid_lat": "-33.81134867291761"}, {"sa2_name": "Merrylands - Holroyd", "poi_count": "112", "z_poi": "1.461", "score": "0.8117", "centroid_lon": "150.98444547272538", "centroid_lat": "-33.83397575364498"}, {"sa2_name": "Granville - Clyde", "poi_count": "105", "z_poi": "1.2591", "score": "0.7789", "centroid_lon": "151.01009359305806", "centroid_lat": "-33.8349477475808"}, {"sa2_name": "Northmead", "poi_count": "97", "z_poi": "1.0283", "score": "0.7366", "centroid_lon": "150.99091059992082", "centroid_lat": "-33.796681770085925"}, {"sa2_name": "Guildford West - Merrylands West", "poi_count": "96", "z_poi": "0.9995", "score": "0.731", "centroid_lon": "150.97008056321576", "centroid_lat": "-33.845942597265854"}, {"sa2_name": "Wentworth Point - Sydney Olympic Park", "poi_count": "94", "z_poi": "0.9418", "score": "0.7195", "centroid_lon": "151.0694138804177", "centroid_lat": "-33.844906189899234"}, {"sa2_name": "Parramatta - North", "poi_count": "94", "z_poi": "0.9418", "score": "0.7195", "centroid_lon": "151.0032163192679", "centroid_lat": "-33.81472670085324"}, {"sa2_name": "Guildford - South Granville", "poi_count": "84", "z_poi": "0.6533", "score": "0.6578", "centroid_lon": "151.0019867223402", "centroid_lat": "-33.85695683418515"}, {"sa2_name": "Lidcombe", "poi_count": "83", "z_poi": "0.6245", "score": "0.6512", "centroid_lon": "151.04415863289265", "centroid_lat": "-33.86415988801831"}, {"sa2_name": "Oatlands - Dundas Valley", "poi_count": "82", "z_poi": "0.5956", "score": "0.6447", "centroid_lon": "151.029", "centroid_lat": "-33.796"}, {"sa2_name": "Toongabbie - Constitution Hill", "poi_count": "82", "z_poi": "0.5956", "score": "0.6447", "centroid_lon": "150.946", "centroid_lat": "-33.787"}, {"sa2_name": "Fairfield - East", "poi_count": "79", "z_poi": "0.5091", "score": "0.6246", "centroid_lon": "150.97", "centroid_lat": "-33.868"}, {"sa2_name": "Wentworthville - Westmead", "poi_count": "74", "z_poi": "0.3648", "score": "0.5902", "centroid_lon": "150.99", "centroid_lat": "-33.806"}, {"sa2_name": "Chester Hill - Sefton", "poi_count": "71", "z_poi": "0.2783", "score": "0.5691", "centroid_lon": "150.999", "centroid_lat": "-33.881"}, {"sa2_name": "Auburn - Central", "poi_count": "68", "z_poi": "0.1917", "score": "0.5478", "centroid_lon": "151.033", "centroid_lat": "-33.849"}, {"sa2_name": "Winston Hills", "poi_count": "66", "z_poi": "0.1341", "score": "0.5335", "centroid_lon": "150.974", "centroid_lat": "-33.777"}, {"sa2_name": "Pemulwuy - Greystanes (North)", "poi_count": "63", "z_poi": "0.0475", "score": "0.5119", "centroid_lon": "150.93", "centroid_lat": "-33.812"}, {"sa2_name": "Carlingford - West", "poi_count": "61", "z_poi": "-0.0102", "score": "0.4975", "centroid_lon": "151.039", "centroid_lat": "-33.779"}, {"sa2_name": "Greystanes - South", "poi_count": "50", "z_poi": "-0.3275", "score": "0.4188", "centroid_lon": "150.942", "centroid_lat": "-33.835"}, {"sa2_name": "Pendle Hill - Girraween", "poi_count": "50", "z_poi": "-0.3275", "score": "0.4188", "centroid_lon": "150.954", "centroid_lat": "-33.8"}, {"sa2_name": "Carlingford - East", "poi_count": "48", "z_poi": "-0.3852", "score": "0.4049", "centroid_lon": "151.056", "centroid_lat": "-33.779"}, {"sa2_name": "Rosehill - Harris Park", "poi_count": "48", "z_poi": "-0.3852", "score": "0.4049", "centroid_lon": "151.019", "centroid_lat": "-33.823"}, {"sa2_name": "Silverwater - Newington", "poi_count": "37", "z_poi": "-0.7025", "score": "0.3313", "centroid_lon": "151.056", "centroid_lat": "-33.833"}, {"sa2_name": "North Rocks", "poi_count": "37", "z_poi": "-0.7025", "score": "0.3313", "centroid_lon": "151.019", "centroid_lat": "-33.766"}, {"sa2_name": "Regents Park", "poi_count": "32", "z_poi": "-0.8468", "score": "0.3001", "centroid_lon": "151.021", "centroid_lat": "-33.882"}, {"sa2_name": "Auburn - South", "poi_count": "22", "z_poi": "-1.1352", "score": "0.2432", "centroid_lon": "151.031", "centroid_lat": "-33.862"}, {"sa2_name": "Auburn - North", "poi_count": "21", "z_poi": "-1.1641", "score": "0.2379", "centroid_lon": "151.029", "centroid_lat": "-33.835"}, {"sa2_name": "Parramatta - South", "poi_count": "21", "z_poi": "-1.1641", "score": "0.2379", "centroid_lon": "151.003", "centroid_lat": "-33.823"}, {"sa2_name": "Berala", "poi_count": "20", "z_poi": "-1.1929", "score": "0.2327", "centroid_lon": "151.026", "centroid_lat": "-33.873"}, {"sa2_name": "South Wentworthville", "poi_count": "16", "z_poi": "-1.3083", "score": "0.2128", "centroid_lon": "150.974", "centroid_lat": "-33.823"}, {"sa2_name": "Smithfield Industrial", "poi_count": "11", "z_poi": "-1.4525", "score": "0.1896", "centroid_lon": "150.93", "centroid_lat": "-33.847"}, {"sa2_name": "Rookwood Cemetery", "poi_count": "9", "z_poi": "-1.5102", "score": "0.1809", "centroid_lon": "151.054", "centroid_lat": "-33.873"}, {"sa2_name": "Yennora Industrial", "poi_count": "3", "z_poi": "-1.6833", "score": "0.1567", "centroid_lon": "150.97", "centroid_lat": "-33.865"}], "growth": [{"year": "2021", "births": "101332", "deaths": "56525", "natural_increase": "44807", "net_overseas_mig": "-5940", "net_internal_mig": "-16822", "total_mig": "-22762", "total_growth": "22045"}, {"year": "2022", "births": "97884", "deaths": "62980", "natural_increase": "34904", "net_overseas_mig": "69112", "net_internal_mig": "-39335", "total_mig": "29777", "total_growth": "64681"}, {"year": "2023", "births": "91947", "deaths": "59451", "natural_increase": "32496", "net_overseas_mig": "177100", "net_internal_mig": "-34158", "total_mig": "142942", "total_growth": "175438"}], "dep": [{"year": "2019", "youth_dep_ratio": "28.46", "oldage_dep_ratio": "25.08", "total_dep_ratio": "53.54"}, {"year": "2020", "youth_dep_ratio": "28.46", "oldage_dep_ratio": "25.86", "total_dep_ratio": "54.32"}, {"year": "2021", "youth_dep_ratio": "28.67", "oldage_dep_ratio": "26.75", "total_dep_ratio": "55.42"}, {"year": "2022", "youth_dep_ratio": "28.49", "oldage_dep_ratio": "27.15", "total_dep_ratio": "55.64"}, {"year": "2023", "youth_dep_ratio": "27.72", "oldage_dep_ratio": "27.09", "total_dep_ratio": "54.81"}, {"year": "2024", "youth_dep_ratio": "27.12", "oldage_dep_ratio": "27.32", "total_dep_ratio": "54.44"}], "mig": [{"year": "2021", "overseas_arrivals": "72759", "overseas_departures": "78699", "net_overseas_mig": "-5940", "net_internal_mig": "-16822", "net_total_mig": "-22762"}, {"year": "2022", "overseas_arrivals": "152865", "overseas_departures": "83753", "net_overseas_mig": "69112", "net_internal_mig": "-39335", "net_total_mig": "29777"}, {"year": "2023", "overseas_arrivals": "250037", "overseas_departures": "72937", "net_overseas_mig": "177100", "net_internal_mig": "-34158", "net_total_mig": "142942"}, {"year": "2024", "overseas_arrivals": "217211", "overseas_departures": "79781", "net_overseas_mig": "137430", "net_internal_mig": "-30865", "net_total_mig": "106565"}], "atsi": [{"census_year": "2011", "atsi_census_count": "172620", "atsi_share_pct": "2.5", "atsi_erp_estimate": "208476", "atsi_median_age": "21.4"}, {"census_year": "2016", "atsi_census_count": "216171", "atsi_share_pct": "2.9", "atsi_erp_estimate": "265685", "atsi_median_age": "22.6"}, {"census_year": "2021", "atsi_census_count": "278043", "atsi_share_pct": "3.4", "atsi_erp_estimate": "339710", "atsi_median_age": "23.4"}], "born": [{"region": "Southern and Central Asia", "pct_2016": "3.6", "pct_2021": "4.8", "change_pts": "1.2"}, {"region": "North Africa and the Middle East", "pct_2016": "2.5", "pct_2021": "2.9", "change_pts": "0.4"}, {"region": "South-East Asia", "pct_2016": "4.0", "pct_2021": "4.4", "change_pts": "0.4"}, {"region": "Americas", "pct_2016": "1.4", "pct_2021": "1.6", "change_pts": "0.2"}, {"region": "Sub-Saharan Africa", "pct_2016": "1.0", "pct_2021": "1.1", "change_pts": "0.1"}, {"region": "North-East Asia", "pct_2016": "4.8", "pct_2021": "4.8", "change_pts": "0.0"}]};
+const fmt = n => Number(n).toLocaleString('en-AU');
+const ink='#10243E', signal='#E0533D', signal2='#F0A35E', teal='#2E7C84', muted='#5C6B7A';
+Chart.defaults.font.family="Inter"; Chart.defaults.color=muted; Chart.defaults.font.size=12;
+
+// KPIs
+const g23 = DATA.growth.find(r=>r.year=='2023');
+document.getElementById('k1').textContent = '82%';
+document.getElementById('k2').textContent = DATA.dep.find(r=>r.year=='2024').oldage_dep_ratio;
+document.getElementById('k3').textContent = '+61%';
+document.getElementById('k4').textContent = '29.3%';
+
+// Growth chart
+new Chart(cGrowth,{type:'bar',data:{labels:DATA.growth.map(r=>r.year),datasets:[
+ {label:'Natural increase',data:DATA.growth.map(r=>+r.natural_increase),backgroundColor:teal},
+ {label:'Net migration',data:DATA.growth.map(r=>+r.total_mig),backgroundColor:signal}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}});
+
+// Dependency chart
+new Chart(cDep,{type:'line',data:{labels:DATA.dep.map(r=>r.year),datasets:[
+ {label:'Youth',data:DATA.dep.map(r=>+r.youth_dep_ratio),borderColor:signal2,backgroundColor:'transparent',tension:.3,borderWidth:2.5,pointRadius:3},
+ {label:'Old-age',data:DATA.dep.map(r=>+r.oldage_dep_ratio),borderColor:teal,backgroundColor:'transparent',tension:.3,borderWidth:2.5,pointRadius:3},
+ {label:'Total',data:DATA.dep.map(r=>+r.total_dep_ratio),borderColor:ink,borderDash:[5,4],backgroundColor:'transparent',tension:.3,borderWidth:1.8,pointRadius:0}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{beginAtZero:false}}}});
+
+// Migration chart
+new Chart(cMig,{type:'bar',data:{labels:DATA.mig.map(r=>r.year),datasets:[
+ {label:'Net overseas',data:DATA.mig.map(r=>+r.net_overseas_mig),backgroundColor:signal},
+ {label:'Net internal',data:DATA.mig.map(r=>+r.net_internal_mig),backgroundColor:'#9FB0C2'}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}});
+
+// Born chart
+const born=[...DATA.born].sort((a,b)=>+b.pct_2021-+a.pct_2021);
+new Chart(cBorn,{type:'bar',data:{labels:born.map(r=>r.region),datasets:[
+ {label:'2016',data:born.map(r=>+r.pct_2016),backgroundColor:'#C9D4E0'},
+ {label:'2021',data:born.map(r=>+r.pct_2021),backgroundColor:teal}
+]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}},scales:{x:{ticks:{callback:v=>v+'%'}}}}});
+
+// Map
+const scores=DATA.scores.map(r=>({name:r.sa2_name,poi:+r.poi_count,score:+r.score,lat:+r.centroid_lat,lon:+r.centroid_lon}));
+const col = s => s>=0.7?'#2E7C84':s>=0.55?'#7FB069':s>=0.4?'#F0A35E':s>=0.28?'#E0533D':'#C44A33';
+const map=L.map('map',{scrollWheelZoom:false}).setView([-33.82,150.99],12);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:18}).addTo(map);
+const markers={};
+scores.forEach(d=>{
+  const m=L.circleMarker([d.lat,d.lon],{radius:7+d.score*13,fillColor:col(d.score),color:'#fff',weight:1.5,fillOpacity:.82})
+   .addTo(map).bindPopup('<b>'+d.name+'</b><br>'+d.poi+' POIs · score '+d.score.toFixed(3));
+  markers[d.name]=m;
+});
+
+// Ranked rows
+const rows=document.getElementById('rankRows');
+scores.sort((a,b)=>b.score-a.score).forEach((d,i)=>{
+  const el=document.createElement('div'); el.className='r';
+  el.innerHTML='<span class="rk">'+String(i+1).padStart(2,'0')+'</span>'+
+    '<div><div class="nm">'+d.name+'</div><div class="bar" style="width:'+(d.score*100)+'%"></div></div>'+
+    '<span class="sc">'+d.score.toFixed(3)+'</span>';
+  el.onclick=()=>{map.setView([d.lat,d.lon],14);markers[d.name].openPopup();};
+  rows.appendChild(el);
+});
+</script>
+</body>
+</html>
